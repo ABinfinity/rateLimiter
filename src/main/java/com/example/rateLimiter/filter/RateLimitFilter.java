@@ -25,23 +25,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain chain)
             throws IOException, ServletException {
-
-        System.out.println("METHOD=" + request.getMethod() + " URI=" + request.getRequestURI() + " API_KEY=" + request.getHeader("X-API-KEY"));
-        System.out.println("hello");
-
         String apiKey = request.getHeader("X-API-KEY");
 
         if (apiKey == null) {
             response.setStatus(401);
             response.getWriter().write("Unauthorized access, add api key");
             return;
+        } else {
+            if (!limiter.allowRequest(apiKey)) {
+                response.setStatus(429);
+                response.getWriter().write("Too Many Requests");
+                return;
+            }
         }
-
-//        if (!limiter.allowRequest(apiKey)) {
-//            response.setStatus(429);
-//            response.getWriter().write("Too Many Requests");
-//            return;
-//        }
 
         chain.doFilter(request, response);
     }
